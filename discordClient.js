@@ -1,7 +1,8 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { startGame, guessNumber } = require('./game');
 const { commands } = require('./commands');
-const { registerCommands } = require('./commands');  // Importation de la fonction d'enregistrement
+const { registerCommands } = require('./commands'); // Assure-toi du bon chemin
+
 
 const client = new Client({
   intents: [
