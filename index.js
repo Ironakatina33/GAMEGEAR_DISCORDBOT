@@ -1,12 +1,6 @@
-require('dotenv').config();
-// Importation des modules nécessaires
-const express = require('express');
-const app = express();
-const { startServer } = require('./server');
-const { client } = require('./discordClient');
+require('dotenv').config();  // Charge les variables d'environnement
 
-// Initialisation du serveur Express
-startServer(app);
+const app = require('./server');  // Démarre le serveur Express
+require('./discordClient');  // Démarre le bot Discord
 
-// Connexion du bot Discord
-client.login(process.env.DISCORD_TOKEN);
+console.log('Bot et serveur Express démarrés.');
