@@ -18,29 +18,31 @@ client.once('ready', () => {
   });
   
 
-client.on('messageCreate', async message => {
-  if (message.author.bot) return;
-
-  if (message.content.startsWith('game!startgame')) {
-    startGame(message.author);
-    await message.reply('Le jeu de devinette a commencé!');
-  }
-
-  if (message.content.startsWith('game!guess')) {
-    const args = message.content.split(' ');
-    const result = guessNumber(message.author, args[1]);
-    if (result.error) {
-      await message.reply(result.error);
-    } else if (result.success) {
-      await message.reply(result.success);
-    } else if (result.hint) {
-      await message.reply(`Votre nombre est ${result.hint}.`);
+  client.on('messageCreate', async message => {
+    // Ignore les messages du bot lui-même
+    if (message.author.bot) return;
+  
+    // Vérifie si le message commence par le préfixe personnalisé
+    if (!message.content.startsWith(prefix)) return;
+  
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+  
+    // Commande pour afficher les commandes disponibles
+    if (command === 'help' || command === 'commands') {
+      const embed = new EmbedBuilder()
+        .setColor(0x0099ff)
+        .setTitle('Liste des commandes disponibles')
+        .setDescription(
+          '- `game!startgame` : Commencez un jeu de devinette\n- `game!guess [nombre]` : Devinez un nombre entre 1 et 100\n- `game!help` ou `game!commands` : Affiche la liste des commandes disponibles'
+        )
+        .setTimestamp();
+  
+      await message.reply({ embeds: [embed] });
     }
-  }
-
-  if (message.content.startsWith('game!commands')) {
-    await message.reply('Les commandes disponibles sont: `game!startgame`, `game!guess [nombre]`, `game!commands`.');
-  }
-});
+  
+    // Autres commandes ici (startgame, guess, etc.)
+  });
+  
 
 client.login(process.env.DISCORD_TOKEN);
