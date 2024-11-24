@@ -67,37 +67,42 @@ client.on('messageCreate', async (message) => {
   }
 
   // Commande dm
-  if (command === 'dm') {
-    const userId = args[0]; // Le premier argument est l'ID de l'utilisateur
-    const dmMessage = args.slice(1).join(' '); // Le reste est le message à envoyer
+// Commande dm
+if (command === 'dm') {
+  const userMention = args[0]; // Le premier argument est la mention de l'utilisateur
+  const dmMessage = args.slice(1).join(' '); // Le reste est le message à envoyer
 
-    if (!userId || !dmMessage) {
-      return message.reply('Usage : `game!dm <user_id> <message>`');
-    }
-
-    try {
-      console.log(`Tentative d'envoi de DM à l'utilisateur avec ID : ${userId}`);
-
-      // Récupère l'utilisateur
-      const user = await client.users.fetch(userId);
-
-      if (!user) {
-        return message.reply("Utilisateur introuvable. Vérifie l'ID fourni.");
-      }
-
-      // Envoie le message privé
-      await user.send(dmMessage);
-      message.reply(`Message envoyé avec succès à ${user.username} !`);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi du DM :', error);
-
-      if (error.code === 50007) { // Code d'erreur spécifique : Can't DM this user
-        return message.reply("Impossible d'envoyer le message. L'utilisateur a probablement désactivé les DMs.");
-      }
-
-      message.reply("Une erreur s'est produite lors de l'envoi du message.");
-    }
+  if (!userMention || !dmMessage) {
+    return message.reply('Usage : `game!dm <@user> <message>`');
   }
+
+  // Extraire l'ID de l'utilisateur de la mention (ex : <@439888146809749515> -> 439888146809749515)
+  const userId = userMention.replace(/[<>@!]/g, '');
+
+  try {
+    console.log(`Tentative d'envoi de DM à l'utilisateur avec ID : ${userId}`);
+
+    // Récupère l'utilisateur
+    const user = await client.users.fetch(userId);
+
+    if (!user) {
+      return message.reply("Utilisateur introuvable. Vérifie l'ID fourni.");
+    }
+
+    // Envoie le message privé
+    await user.send(dmMessage);
+    message.reply(`Message envoyé avec succès à ${user.username} !`);
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi du DM :', error);
+
+    if (error.code === 50007) { // Code d'erreur spécifique : Can't DM this user
+      return message.reply("Impossible d'envoyer le message. L'utilisateur a probablement désactivé les DMs.");
+    }
+
+    message.reply("Une erreur s'est produite lors de l'envoi du message.");
+  }
+}
+
 });
 
 // Connexion du bot
