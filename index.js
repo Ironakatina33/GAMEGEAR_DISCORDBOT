@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,7 +11,7 @@ app.listen(port, () => {
 });
 
 require('dotenv').config();
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
 
 const prefix = 'game!'; // Préfixe personnalisé
 let secretNumber = null;
@@ -43,7 +42,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log('Enregistrement des commandes slash...');
     await rest.put(
-      '/applications/{client_id}/commands',
+      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), // Utiliser l'ID du bot
       { body: commands.map(command => command.toJSON()) }
     );
     console.log('Commandes slash enregistrées avec succès');
@@ -69,12 +68,12 @@ client.on('messageCreate', async message => {
   if (command === 'startgame') {
     secretNumber = Math.floor(Math.random() * 100) + 1;
     players = [message.author.id];
-    await message.reply('Le jeu a commencé ! Devinez un nombre entre 1 et 100 en utilisant la commande `bot!guess [nombre]`.');
+    await message.reply('Le jeu a commencé ! Devinez un nombre entre 1 et 100 en utilisant la commande `game!guess [nombre]`.');
   }
 
   if (command === 'guess') {
     if (!secretNumber) {
-      return message.reply('Aucun jeu n\'a été lancé. Utilisez `bot!startgame` pour commencer.');
+      return message.reply('Aucun jeu n\'a été lancé. Utilisez `game!startgame` pour commencer.');
     }
 
     const guess = parseInt(args[0], 10);
@@ -92,7 +91,7 @@ client.on('messageCreate', async message => {
 
   // Commande pour lister toutes les commandes
   if (command === 'commands' || command === 'help') {
-    await message.reply('Voici les commandes disponibles :\n- `bot!startgame` : Commencez un jeu de devinette\n- `bot!guess [nombre]` : Devinez un nombre entre 1 et 100\n- `bot!commands` : Affiche la liste des commandes disponibles');
+    await message.reply('Voici les commandes disponibles :\n- `game!startgame` : Commencez un jeu de devinette\n- `game!guess [nombre]` : Devinez un nombre entre 1 et 100\n- `game!commands` : Affiche la liste des commandes disponibles');
   }
 });
 
