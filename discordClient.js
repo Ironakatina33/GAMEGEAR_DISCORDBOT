@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { startGame, guessNumber } = require('./game');  // Importation des fonctions du fichier game.js
 
-// Définir le préfixe ici
 const prefix = 'game!'; // Définir un préfixe personnalisé
 
 const client = new Client({
@@ -13,7 +13,6 @@ const client = new Client({
   partials: ['CHANNEL'], // Nécessaire pour les DMs
 });
 
-// Ton code pour l'événement messageCreate
 client.on('messageCreate', async message => {
   // Ignore les messages du bot lui-même
   if (message.author.bot) return;
@@ -36,9 +35,25 @@ client.on('messageCreate', async message => {
     await message.reply({ embeds: [embed] });
   }
 
-  // Autres commandes ici (startgame, guess, etc.)
-});
+  if (command === 'startgame') {
+    const response = startGame(message.author);  // Démarrer une nouvelle partie
+    if (response.error) {
+      return message.reply(response.error);
+    }
+    message.reply(response.success);
+  }
 
-  
+  if (command === 'guess') {
+    const guess = args[0];
+    const response = guessNumber(message.author, guess);  // Faire une supposition
+    if (response.error) {
+      return message.reply(response.error);
+    }
+    if (response.success) {
+      return message.reply(response.success);
+    }
+    message.reply(response.hint);  // Indiquer si c'est trop bas ou trop haut
+  }
+});
 
 client.login(process.env.DISCORD_TOKEN);
