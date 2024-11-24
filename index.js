@@ -11,7 +11,7 @@ app.listen(port, () => {
 });
 
 require('dotenv').config();
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder } = require('discord.js');
 
 const prefix = 'game!'; // Préfixe personnalisé
 let secretNumber = null;
@@ -19,10 +19,10 @@ let players = [];
 
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds, // Gérer les serveurs
-    GatewayIntentBits.GuildMessages, // Gérer les messages dans les serveurs
-    GatewayIntentBits.DirectMessages, // Gérer les messages privés
-    GatewayIntentBits.MessageContent, // Lire le contenu des messages
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.DirectMessages, 
+    GatewayIntentBits.MessageContent, 
   ],
   partials: ['CHANNEL'], // Nécessaire pour les DMs
 });
@@ -42,7 +42,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log('Enregistrement des commandes slash...');
     await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), // Utiliser l'ID du bot
+      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), 
       { body: commands.map(command => command.toJSON()) }
     );
     console.log('Commandes slash enregistrées avec succès');
@@ -68,30 +68,66 @@ client.on('messageCreate', async message => {
   if (command === 'startgame') {
     secretNumber = Math.floor(Math.random() * 100) + 1;
     players = [message.author.id];
-    await message.reply('Le jeu a commencé ! Devinez un nombre entre 1 et 100 en utilisant la commande `game!guess [nombre]`.');
+
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Le jeu de devinette a commencé!')
+      .setDescription('Devinez un nombre entre 1 et 100 en utilisant la commande `game!guess [nombre]`. Bonne chance !')
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
   }
 
   if (command === 'guess') {
     if (!secretNumber) {
-      return message.reply('Aucun jeu n\'a été lancé. Utilisez `game!startgame` pour commencer.');
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setTitle('Aucun jeu en cours')
+        .setDescription('Aucun jeu n\'a été lancé. Utilisez `game!startgame` pour commencer.')
+        .setTimestamp();
+
+      return message.reply({ embeds: [embed] });
     }
 
     const guess = parseInt(args[0], 10);
     if (isNaN(guess)) {
-      return message.reply('Veuillez entrer un nombre valide.');
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setTitle('Entrée invalide')
+        .setDescription('Veuillez entrer un nombre valide.')
+        .setTimestamp();
+
+      return message.reply({ embeds: [embed] });
     }
 
+    const embed = new EmbedBuilder()
+      .setColor(guess === secretNumber ? 0x00ff00 : 0xffa500)
+      .setTitle(guess === secretNumber ? 'Félicitations!' : 'Essaye encore!')
+      .setDescription(
+        guess === secretNumber
+          ? `Félicitations ${message.author.tag}, vous avez deviné le bon nombre !`
+          : `Votre guess est ${guess < secretNumber ? 'trop bas' : 'trop haut'}, essayez encore.`
+      )
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
+
     if (guess === secretNumber) {
-      await message.reply(`Félicitations ${message.author.tag}, vous avez deviné le bon nombre !`);
       secretNumber = null; // Réinitialiser le jeu
-    } else {
-      await message.reply(guess < secretNumber ? 'Trop bas ! Essayez encore.' : 'Trop haut ! Essayez encore.');
     }
   }
 
   // Commande pour lister toutes les commandes
   if (command === 'commands' || command === 'help') {
-    await message.reply('Voici les commandes disponibles :\n- `game!startgame` : Commencez un jeu de devinette\n- `game!guess [nombre]` : Devinez un nombre entre 1 et 100\n- `game!commands` : Affiche la liste des commandes disponibles');
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Liste des commandes disponibles')
+      .setDescription(
+        '- `game!startgame` : Commencez un jeu de devinette\n- `game!guess [nombre]` : Devinez un nombre entre 1 et 100\n- `game!commands` : Affiche la liste des commandes disponibles'
+      )
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
   }
 });
 
@@ -104,29 +140,65 @@ client.on('interactionCreate', async interaction => {
   if (commandName === 'startgame') {
     secretNumber = Math.floor(Math.random() * 100) + 1;
     players = [interaction.user.id];
-    await interaction.reply('Le jeu a commencé ! Devinez un nombre entre 1 et 100 en utilisant la commande `/guess [nombre]`.');
+
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Le jeu de devinette a commencé!')
+      .setDescription('Devinez un nombre entre 1 et 100 en utilisant la commande `/guess [nombre]`. Bonne chance !')
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
   }
 
   if (commandName === 'guess') {
     if (!secretNumber) {
-      return interaction.reply('Aucun jeu n\'a été lancé. Utilisez `/startgame` pour commencer.');
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setTitle('Aucun jeu en cours')
+        .setDescription('Aucun jeu n\'a été lancé. Utilisez `/startgame` pour commencer.')
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
     }
 
     const guess = interaction.options.getInteger('number');
     if (guess === null) {
-      return interaction.reply('Veuillez entrer un nombre valide.');
+      const embed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setTitle('Entrée invalide')
+        .setDescription('Veuillez entrer un nombre valide.')
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
     }
 
+    const embed = new EmbedBuilder()
+      .setColor(guess === secretNumber ? 0x00ff00 : 0xffa500)
+      .setTitle(guess === secretNumber ? 'Félicitations!' : 'Essaye encore!')
+      .setDescription(
+        guess === secretNumber
+          ? `Félicitations ${interaction.user.tag}, vous avez deviné le bon nombre !`
+          : `Votre guess est ${guess < secretNumber ? 'trop bas' : 'trop haut'}, essayez encore.`
+      )
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+
     if (guess === secretNumber) {
-      await interaction.reply(`Félicitations ${interaction.user.tag}, vous avez deviné le bon nombre !`);
       secretNumber = null; // Réinitialiser le jeu
-    } else {
-      await interaction.reply(guess < secretNumber ? 'Trop bas ! Essayez encore.' : 'Trop haut ! Essayez encore.');
     }
   }
 
   if (commandName === 'commands') {
-    await interaction.reply('Voici les commandes disponibles :\n- `/startgame` : Commencez un jeu de devinette\n- `/guess [nombre]` : Devinez un nombre entre 1 et 100\n- `/commands` : Affiche la liste des commandes disponibles');
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Liste des commandes disponibles')
+      .setDescription(
+        '- `/startgame` : Commencez un jeu de devinette\n- `/guess [nombre]` : Devinez un nombre entre 1 et 100\n- `/commands` : Affiche la liste des commandes disponibles'
+      )
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
   }
 });
 
