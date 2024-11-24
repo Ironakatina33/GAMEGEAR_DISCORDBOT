@@ -1,3 +1,16 @@
+
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bot is online!');
+});
+
+app.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`);
+});
+
 require('dotenv').config();
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST } = require('discord.js');
 
