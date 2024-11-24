@@ -5,24 +5,26 @@ const prefix = 'game!'; // Définir un préfixe personnalisé
 
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.DirectMessages, 
+    GatewayIntentBits.MessageContent, 
   ],
   partials: ['CHANNEL'], // Nécessaire pour les DMs
 });
 
-// Gestion des messages avec commandes préfixées
-client.on('messageCreate', async message => {
-  if (message.author.bot) return; // Ignore les messages des bots
-  if (!message.content.startsWith(prefix)) return; // Ignore les messages sans préfixe
+// Écoute des messages
+client.on('messageCreate', async (message) => {
+  // Ignore les messages provenant du bot lui-même
+  if (message.author.bot) return;
 
-  // Extraction de la commande et des arguments
+  // Vérifie si le message commence par le préfixe
+  if (!message.content.startsWith(prefix)) return;
+
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // Commande Help
+  // Commande help / commands
   if (command === 'help' || command === 'commands') {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
@@ -31,26 +33,26 @@ client.on('messageCreate', async message => {
         '- `game!startgame` : Commencez un jeu de devinette\n' +
         '- `game!guess [nombre]` : Devinez un nombre entre 1 et 100\n' +
         '- `game!help` ou `game!commands` : Affiche la liste des commandes disponibles\n' +
-        '- `game!dm <user_id> <message>` : Envoie un message privé à un utilisateur'
+        '- `game!dm <user_id> <message>` : Envoyez un message privé à un utilisateur'
       )
       .setTimestamp();
-    return message.reply({ embeds: [embed] });
+
+    await message.reply({ embeds: [embed] });
   }
 
-  // Commande Startgame
+  // Commande startgame
   if (command === 'startgame') {
     startGame(message.author); // Démarre le jeu pour le joueur
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('Jeu démarré!')
-      .setDescription(
-        `Un jeu de devinette a commencé ! ${message.author.username}, devinez un nombre entre 1 et 100.`
-      )
+      .setDescription(`Un jeu de devinette a commencé ! ${message.author.username}, devinez un nombre entre 1 et 100.`)
       .setTimestamp();
-    return message.reply({ embeds: [embed] });
+
+    await message.reply({ embeds: [embed] });
   }
 
-  // Commande Guess
+  // Commande guess
   if (command === 'guess') {
     const guess = args[0];
     const result = guessNumber(message.author, guess);
@@ -58,14 +60,13 @@ client.on('messageCreate', async message => {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('Résultat de la devinette')
-      .setDescription(
-        result.error || result.success || `Votre devinette est ${result.hint}.`
-      )
+      .setDescription(result.error || result.success || `Votre devinette est ${result.hint}.`)
       .setTimestamp();
-    return message.reply({ embeds: [embed] });
+
+    await message.reply({ embeds: [embed] });
   }
 
-  // Commande DM
+  // Commande dm
   if (command === 'dm') {
     const userId = args[0]; // Le premier argument est l'ID de l'utilisateur
     const dmMessage = args.slice(1).join(' '); // Le reste est le message à envoyer
@@ -75,32 +76,29 @@ client.on('messageCreate', async message => {
     }
 
     try {
-      const user = await client.users.fetch(userId); // Récupère l'utilisateur
-      await user.send(dmMessage); // Envoie le message privé
-      return message.reply(`Message envoyé à ${user.username} !`);
+      console.log(`Tentative d'envoi de DM à l'utilisateur avec ID : ${userId}`);
+
+      // Récupère l'utilisateur
+      const user = await client.users.fetch(userId);
+
+      if (!user) {
+        return message.reply("Utilisateur introuvable. Vérifie l'ID fourni.");
+      }
+
+      // Envoie le message privé
+      await user.send(dmMessage);
+      message.reply(`Message envoyé avec succès à ${user.username} !`);
     } catch (error) {
-      console.error(error);
-      return message.reply('Impossible d\'envoyer le message. Vérifie l\'ID de l\'utilisateur.');
+      console.error('Erreur lors de l\'envoi du DM :', error);
+
+      if (error.code === 50007) { // Code d'erreur spécifique : Can't DM this user
+        return message.reply("Impossible d'envoyer le message. L'utilisateur a probablement désactivé les DMs.");
+      }
+
+      message.reply("Une erreur s'est produite lors de l'envoi du message.");
     }
   }
 });
 
-// Gestion des interactions slash
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
-
-  if (interaction.commandName === 'dm') {
-    const user = interaction.options.getUser('utilisateur');
-    const message = interaction.options.getString('message');
-
-    try {
-      await user.send(message); // Envoie le message privé
-      await interaction.reply({ content: `Message envoyé à ${user.username} !`, ephemeral: true });
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({ content: 'Impossible d\'envoyer le message.', ephemeral: true });
-    }
-  }
-});
-
+// Connexion du bot
 client.login(process.env.DISCORD_TOKEN);
