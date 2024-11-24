@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
-const { startGame, guessNumber } = require('./game');  // Importation des fonctions du fichier game.js
+const { startGame, guessNumber } = require('./game'); // Importer les fonctions de game.js
 
 const prefix = 'game!'; // Définir un préfixe personnalisé
 
@@ -35,24 +35,30 @@ client.on('messageCreate', async message => {
     await message.reply({ embeds: [embed] });
   }
 
+  // Commande startgame
   if (command === 'startgame') {
-    const response = startGame(message.author);  // Démarrer une nouvelle partie
-    if (response.error) {
-      return message.reply(response.error);
-    }
-    message.reply(response.success);
+    startGame(message.author); // Démarre le jeu pour le joueur
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Jeu démarré!')
+      .setDescription(`Un jeu de devinette a commencé ! ${message.author.username}, devinez un nombre entre 1 et 100.`)
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
   }
 
+  // Commande guess
   if (command === 'guess') {
     const guess = args[0];
-    const response = guessNumber(message.author, guess);  // Faire une supposition
-    if (response.error) {
-      return message.reply(response.error);
-    }
-    if (response.success) {
-      return message.reply(response.success);
-    }
-    message.reply(response.hint);  // Indiquer si c'est trop bas ou trop haut
+    const result = guessNumber(message.author, guess);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('Résultat de la devinette')
+      .setDescription(result.error || result.success || `Votre devinette est ${result.hint}.`)
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
   }
 });
 
