@@ -12,9 +12,10 @@ const client = new Client({
 });
 
 client.once('ready', () => {
-  console.log('Bot est prêt !');
-  registerCommands();  // Enregistre les commandes après que le bot est prêt
-});
+    console.log(`Bot connecté en tant que ${client.user.tag}`);
+    registerCommands();  // Enregistre les commandes après que le bot est prêt
+  });
+  
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;

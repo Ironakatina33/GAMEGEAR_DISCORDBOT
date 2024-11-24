@@ -7,4 +7,5 @@ const commands = [
   new SlashCommandBuilder().setName('commands').setDescription('Liste de toutes les commandes disponibles')
 ];
 
-module.exports = { commands };
+module.exports = { commands, registerCommands };
+
