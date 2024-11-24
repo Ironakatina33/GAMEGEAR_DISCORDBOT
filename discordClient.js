@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Fichier pour la configuration du client Discord
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { commands, registerCommands } = require('./commands');

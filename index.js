@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Importation des modules nécessaires
 const express = require('express');
 const app = express();
